@@ -71,8 +71,18 @@ export function SiteHeader() {
             <Menu className="h-6 w-6" />
           </button>
 
-          <Link href="/" className="flex shrink-0 items-center lg:flex-none" aria-label="Velvaroma home">
-            <Image src="/logo.png" alt="Velvaroma Fragrance" width={150} height={72} className="h-14 w-auto" priority />
+          <Link href="/" className="flex shrink-0 items-center gap-3 lg:flex-none" aria-label="Velvaroma home">
+            <Image
+              src="/velvaroma-symbol.png"
+              alt="Velvaroma"
+              width={80}
+              height={80}
+              className="h-14 w-auto md:h-16"
+              priority
+            />
+            <span className="font-serif text-2xl font-medium tracking-[0.28em] text-foreground md:text-3xl">
+              VELVAROMA
+            </span>
           </Link>
 
           <nav className="hidden items-center gap-9 lg:flex">
@@ -135,7 +145,10 @@ export function SiteHeader() {
               className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col gap-1 bg-background p-6 lg:hidden"
             >
               <div className="mb-6 flex items-center justify-between">
-                <Image src="/logo.png" alt="Velvaroma Fragrance" width={120} height={58} className="h-11 w-auto" />
+                <div className="flex items-center gap-2">
+                  <Image src="/velvaroma-symbol.png" alt="Velvaroma" width={48} height={48} className="h-10 w-auto" />
+                  <span className="font-serif text-xl font-medium tracking-[0.22em] text-foreground">VELVAROMA</span>
+                </div>
                 <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
                   <X className="h-6 w-6" />
                 </button>

@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   description:
     'Velvaroma Fragrance offers premium designer-inspired perfumes — Baccarat, Creed, Sospiro, Parfums de Marly and more. Buy 2 Get 1 Free. Free shipping over $80.',
   generator: 'v0.app',
+  icons: {
+    icon: [{ url: '/velvaroma-favicon.png', type: 'image/png' }],
+    shortcut: '/velvaroma-favicon.png',
+    apple: '/velvaroma-favicon.png',
+  },
 }
 
 export const viewport: Viewport = {

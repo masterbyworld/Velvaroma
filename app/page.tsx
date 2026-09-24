@@ -1,7 +1,6 @@
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { HeroCarousel } from '@/components/hero-carousel'
-import { ExploreCategories } from '@/components/explore-categories'
 import { UrgencySection } from '@/components/urgency-section'
 import { TotalInventory } from '@/components/total-inventory'
 import { BrandStats } from '@/components/brand-stats'
@@ -21,7 +20,6 @@ export default function HomePage() {
     <main>
       <SiteHeader />
       <HeroCarousel />
-      <ExploreCategories />
       <UrgencySection />
       <TotalInventory />
       <CollectionSelector />
