@@ -81,12 +81,16 @@ function pushEcommerce(event: string, items: EcommerceItem[], metaEvent: string)
   }
 }
 
+// Analytics identify the product by its BLACK SKU — the replica product the
+// shopper actually browses on the Vercel storefront. The clean White SKU is a
+// checkout-only substitution on Shopify and is intentionally NOT the tracked id,
+// so GA4/Meta reporting reflects the site catalog the customer interacts with.
 export function productToItem(
-  product: Pick<Product, 'whiteSku' | 'name' | 'brand'>,
+  product: Pick<Product, 'blackSku' | 'name' | 'brand'>,
   opts: { variant?: string; price: number; quantity?: number },
 ): EcommerceItem {
   return {
-    item_id: product.whiteSku,
+    item_id: product.blackSku,
     item_name: product.name,
     item_brand: product.brand,
     item_variant: opts.variant,
@@ -97,7 +101,7 @@ export function productToItem(
 
 export function cartItemsToEcommerce(items: CartItem[]): EcommerceItem[] {
   return items.map((i) => ({
-    item_id: i.whiteSku,
+    item_id: i.blackSku,
     item_name: i.name,
     item_variant: i.size,
     price: round(i.price),
