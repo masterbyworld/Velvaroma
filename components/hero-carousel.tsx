@@ -16,7 +16,7 @@ const slides: Slide[] = [
   {
     desktop: '/banners/baccarat.png',
     mobile: '/banners/baccarat-mobile.jpg',
-    href: '/product/baccarat-rouge-540',
+    href: '/product/baccarat-rouge-540-extrait-de-parfum',
     alt: 'Baccarat Rouge 540 — Pre-order, 70ML and 200ML available',
   },
   {

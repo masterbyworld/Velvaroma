@@ -312,3 +312,13 @@ export function discountPercent(p: Pick<Product, 'price' | 'compareAt'>) {
 export function formatPrice(value: number) {
   return `$${value.toFixed(2)} USD`
 }
+
+// Normalize a raw Shopify variant/size string into a clean size label.
+// The backup catalog stores messy values like "100MLML" or "100 ml"; this
+// collapses them to a single canonical label such as "100ML".
+export function normalizeSize(raw: string): string {
+  const m = String(raw || '').match(/(\d+)\s*ml/i)
+  if (m) return `${m[1]}ML`
+  const cleaned = String(raw || '').trim().toUpperCase()
+  return cleaned || DEFAULT_SIZE
+}

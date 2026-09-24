@@ -8,6 +8,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { useCart } from '@/lib/cart-context'
 import { formatPrice } from '@/lib/products'
+import { cartItemsToEcommerce, trackInitiateCheckout } from '@/lib/tracking'
 
 export default function CheckoutPage() {
   const { items } = useCart()
@@ -20,6 +21,7 @@ export default function CheckoutPage() {
     if (items.length === 0 || redirecting) return
     setRedirecting(true)
     setCheckoutError(null)
+    trackInitiateCheckout(cartItemsToEcommerce(items))
     try {
       const res = await fetch('/api/shopify-checkout', {
         method: 'POST',

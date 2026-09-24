@@ -19,8 +19,8 @@ const API_VERSION = '2024-10'
 const FALLBACK_MYSHOPIFY = 'velvaroma.myshopify.com'
 
 function storeDomain(): string {
-  // Read ONLY the exact env var name set in Vercel — no legacy aliases.
-  const raw = (process.env.Velvaroma_Fragrance_Checkout || '')
+  // Prefer Velvaroma's own checkout env var; fall back to the legacy alias.
+  const raw = (process.env.Velvaroma_Checkout || process.env.Velvaroma_Fragrance_Checkout || '')
     .trim()
     .replace(/^https?:\/\//i, '')
     .replace(/\/+$/, '')
@@ -39,8 +39,10 @@ function storeDomain(): string {
 // before the env var was injected it would be baked in as an empty string.
 // A computed key can't be inlined, forcing a true runtime process.env lookup.
 function storefrontToken(): string {
-  const key = 'NEXT_PUBLIC_' + 'SHOPIFY_STOREFRONT_ACCESS_TOKEN'
-  const token = (process.env[key] || '').trim()
+  // Prefer Velvaroma's own token; fall back to the legacy Shopify-named alias.
+  const primary = 'NEXT_PUBLIC_' + 'VELVAROMA_STOREFRONT_ACCESS_TOKEN'
+  const legacy = 'NEXT_PUBLIC_' + 'SHOPIFY_STOREFRONT_ACCESS_TOKEN'
+  const token = (process.env[primary] || process.env[legacy] || '').trim()
   if (!token) throw new Error('Shopify Storefront token is not configured')
   return token
 }
@@ -78,7 +80,7 @@ async function storefront<T>(query: string, variables: Record<string, unknown>):
     const detail = await res.text().catch(() => '')
     const hint =
       res.status === 401
-        ? ' — token/store rejected. Verify NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN and Velvaroma_Fragrance_Checkout.'
+        ? ' — token/store rejected. Verify NEXT_PUBLIC_VELVAROMA_STOREFRONT_ACCESS_TOKEN and Velvaroma_Checkout.'
         : ''
     lastError = new Error(
       `Shopify request failed (${res.status})${hint}${detail ? ` ${detail.slice(0, 200)}` : ''}`,
