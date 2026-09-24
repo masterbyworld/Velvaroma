@@ -4,6 +4,7 @@ import { Jost } from 'next/font/google'
 import { CartProvider } from '@/lib/cart-context'
 import { CartDrawer } from '@/components/cart-drawer'
 import { AnnouncementProvider } from '@/lib/announcement-context'
+import { GtmScript, GtmNoScript } from '@/components/gtm'
 import './globals.css'
 
 const jost = Jost({
@@ -36,7 +37,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${jost.variable} bg-background`}>
+      <head>
+        <GtmScript />
+      </head>
       <body className="antialiased">
+        <GtmNoScript />
         <AnnouncementProvider>
           <CartProvider>
             {children}

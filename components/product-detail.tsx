@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Minus, Plus, Star, Truck, Clock, PackageCheck } from 'lucide-react'
-import { SIZES, formatPrice, discountPercent, type Product } from '@/lib/products'
+import { SIZES, DEFAULT_SIZE, formatPrice, discountPercent, type Product } from '@/lib/products'
 import { useCart } from '@/lib/cart-context'
 import { useLiveStock } from '@/lib/use-live-stock'
+import { productToItem, trackAddToCart, trackViewItem } from '@/lib/tracking'
 
 const GALLERY_ROTATE_MS = 3000
 
@@ -28,6 +29,13 @@ export function ProductDetail({ product }: { product: Product }) {
   const [qty, setQty] = useState(1)
   const [active, setActive] = useState(0)
   const [delivery, setDelivery] = useState('')
+
+  // Fire GA4/Meta view_item once per product view.
+  useEffect(() => {
+    trackViewItem(
+      productToItem(product, { variant: DEFAULT_SIZE, price: product.price, quantity: 1 }),
+    )
+  }, [product.slug])
 
   // Two-face gallery: auto-rotate through the product images.
   const gallery = product.images.length > 0 ? product.images : [product.image]
@@ -58,6 +66,7 @@ export function ProductDetail({ product }: { product: Product }) {
       },
       qty,
     )
+    trackAddToCart(productToItem(product, { variant: size.label, price: unitPrice, quantity: qty }))
   }
 
   return (

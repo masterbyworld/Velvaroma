@@ -7,12 +7,8 @@ import { motion } from 'framer-motion'
 import { ShoppingBag, Star, Heart, User, Users } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { useLiveStock } from '@/lib/use-live-stock'
-import { type Product, DEFAULT_SIZE, discountPercent, formatPrice } from '@/lib/products'
-
-function formatSize(size: string) {
-  const m = String(size || '').match(/(\d+)\s*ml/i)
-  return m ? `${m[1]} ML` : (size || DEFAULT_SIZE).toUpperCase()
-}
+import { type Product, DEFAULT_SIZE, discountPercent, formatPrice, normalizeSize } from '@/lib/products'
+import { productToItem, trackAddToCart } from '@/lib/tracking'
 
 function genderLabel(gender: Product['gender']) {
   if (gender === 'Men') return 'FOR MEN'
@@ -41,6 +37,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       whiteSku: product.whiteSku,
       blackSku: product.blackSku,
     })
+    trackAddToCart(productToItem(product, { variant: DEFAULT_SIZE, price: product.price, quantity: 1 }))
   }
 
   function toggleWish(e: React.MouseEvent) {
@@ -139,7 +136,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           {/* Size + gender chips */}
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             <span className="rounded-md border border-border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              {formatSize(product.size)}
+              {normalizeSize(product.size)}
             </span>
             <span className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               <GenderIcon className="h-3 w-3" />
