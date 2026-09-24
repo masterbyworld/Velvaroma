@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Loader2, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { Loader2, ArrowLeft } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { useCart } from '@/lib/cart-context'
@@ -11,11 +11,9 @@ import { formatPrice } from '@/lib/products'
 import { cartItemsToEcommerce, trackInitiateCheckout } from '@/lib/tracking'
 
 export default function CheckoutPage() {
-  const { items } = useCart()
+  const { items, rawSubtotal, discount, subtotal, freeCount } = useCart()
   const [redirecting, setRedirecting] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
-
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
 
   async function proceedToShopify() {
     if (items.length === 0 || redirecting) return
@@ -62,9 +60,6 @@ export default function CheckoutPage() {
         </Link>
 
         <h1 className="text-3xl font-medium text-foreground md:text-4xl">Secure Checkout</h1>
-        <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <ShieldCheck className="h-4 w-4 text-primary" /> Payment is completed securely on Shopify. No order is ever confirmed on this site.
-        </p>
 
         {items.length === 0 ? (
           <div className="mt-16 text-center">
@@ -91,9 +86,23 @@ export default function CheckoutPage() {
               ))}
             </ul>
 
-            <div className="mt-6 flex items-center justify-between border-t border-border pt-3 text-lg font-medium text-foreground">
+            {discount > 0 && (
+              <div className="mt-6 flex items-center justify-between text-sm font-medium text-sale">
+                <span>Buy 2 Get 1 Free · {freeCount} free</span>
+                <span>−{formatPrice(discount)}</span>
+              </div>
+            )}
+
+            <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-lg font-medium text-foreground">
               <span>Subtotal</span>
-              <span>{formatPrice(subtotal)}</span>
+              <span className="flex items-center gap-2">
+                {discount > 0 && (
+                  <span className="text-sm font-normal text-muted-foreground line-through">
+                    {formatPrice(rawSubtotal)}
+                  </span>
+                )}
+                {formatPrice(subtotal)}
+              </span>
             </div>
 
             {checkoutError && (
@@ -115,9 +124,6 @@ export default function CheckoutPage() {
                 <>Proceed to Secure Checkout · {formatPrice(subtotal)}</>
               )}
             </button>
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              Final price, shipping &amp; taxes are calculated on Shopify. You&apos;ll complete payment on Shopify&apos;s secure checkout.
-            </p>
           </div>
         )}
       </div>
