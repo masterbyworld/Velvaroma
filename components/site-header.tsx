@@ -49,7 +49,13 @@ export function SiteHeader() {
               <Mail className="h-4 w-4" />
               Support@velvaroma.com
             </a>
-            <a href="#" aria-label="Instagram" className="hover:text-muted-foreground">
+            <a
+              href="https://www.instagram.com/velva_roma_shop"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="hover:text-muted-foreground"
+            >
               <AtSign className="h-4 w-4" />
             </a>
           </div>
