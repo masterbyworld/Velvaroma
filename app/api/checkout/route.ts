@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getProductByWhiteSku, SIZES } from '@/lib/products'
+import { getProductByWhiteSku } from '@/lib/products'
 
 // Checkout substitution: the storefront sends the WHITE SKUs the shopper
 // browsed. The server is authoritative — it looks each White SKU up, swaps it
@@ -10,10 +10,6 @@ type IncomingItem = { whiteSku: string; size: string; quantity: number }
 
 const MAX_QTY_PER_LINE = 20
 const MAX_UNITS_PER_ORDER = 60
-
-function sizeMultiplier(label: string): number {
-  return SIZES.find((s) => s.label === label)?.multiplier ?? 1
-}
 
 export async function POST(req: Request) {
   let body: { items?: IncomingItem[] }
@@ -59,7 +55,9 @@ export async function POST(req: Request) {
     totalUnits += cappedQty
 
     // Recompute price from the authoritative catalog value, never the client's.
-    const unitPrice = Math.round(product.price * sizeMultiplier(raw.size) * 100) / 100
+    // Each product is a single real Shopify variant, so the catalog price is the
+    // true price — there is no synthetic size multiplier.
+    const unitPrice = Math.round(product.price * 100) / 100
 
     lineItems.push({
       whiteSku: product.whiteSku,

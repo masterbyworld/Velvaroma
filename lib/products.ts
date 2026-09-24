@@ -4,6 +4,16 @@ import catalog from './catalog.json'
 // Types
 // ---------------------------------------------------------------------------
 
+// A single purchasable Shopify variant: its display label (size/option), its
+// own price + compare-at, and the SKU pair that routes it at checkout.
+export type Variant = {
+  label: string
+  price: number
+  compareAt: number
+  whiteSku: string
+  blackSku: string
+}
+
 export type Product = {
   slug: string
   name: string
@@ -27,16 +37,11 @@ export type Product = {
   whiteSku: string
   blackSku: string
   size: string
+  variants: Variant[]
   inStock: boolean
 }
 
 type RawProduct = (typeof catalog)['products'][number]
-
-export const SIZES = [
-  { ml: 50, label: '50ML', multiplier: 1 },
-  { ml: 100, label: '100ML', multiplier: 1.4 },
-  { ml: 200, label: '200ML', multiplier: 2.1 },
-] as const
 
 export const DEFAULT_SIZE = '100ML'
 
@@ -128,7 +133,18 @@ function toProduct(p: RawProduct): Product {
     notes: { top: [], heart: [], base: [] },
     whiteSku: p.whiteSku,
     blackSku: p.blackSku,
-    size: p.size,
+    size: normalizeSize(p.size),
+    // Each Shopify product in the backup is a single variant, so we map its own
+    // real size, price, compare-at, and SKU pair — no fabricated size ladder.
+    variants: [
+      {
+        label: normalizeSize(p.size),
+        price: p.price,
+        compareAt: p.compareAt,
+        whiteSku: p.whiteSku,
+        blackSku: p.blackSku,
+      },
+    ],
     inStock: p.inStock,
   }
 }

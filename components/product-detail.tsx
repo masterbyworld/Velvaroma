@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Minus, Plus, Star, Truck, Clock, PackageCheck } from 'lucide-react'
-import { SIZES, DEFAULT_SIZE, formatPrice, discountPercent, type Product } from '@/lib/products'
+import { formatPrice, discountPercent, type Product } from '@/lib/products'
 import { useCart } from '@/lib/cart-context'
 import { useLiveStock } from '@/lib/use-live-stock'
 import { productToItem, trackAddToCart, trackViewItem } from '@/lib/tracking'
@@ -25,15 +25,16 @@ export function ProductDetail({ product }: { product: Product }) {
   const { addItem } = useCart()
   const { isInStock } = useLiveStock()
   const inStock = isInStock(product.whiteSku, product.inStock)
-  const [sizeIdx, setSizeIdx] = useState(1)
+  const [variantIdx, setVariantIdx] = useState(0)
   const [qty, setQty] = useState(1)
   const [active, setActive] = useState(0)
   const [delivery, setDelivery] = useState('')
 
   // Fire GA4/Meta view_item once per product view.
   useEffect(() => {
+    const first = product.variants[0]
     trackViewItem(
-      productToItem(product, { variant: DEFAULT_SIZE, price: product.price, quantity: 1 }),
+      productToItem(product, { variant: first.label, price: first.price, quantity: 1 }),
     )
   }, [product.slug])
 
@@ -46,27 +47,29 @@ export function ProductDetail({ product }: { product: Product }) {
     return () => clearInterval(id)
   }, [gallery.length])
 
-  const size = SIZES[sizeIdx]
-  const unitPrice = Math.round(product.price * size.multiplier * 100) / 100
-  const compareAt = Math.round(product.compareAt * size.multiplier * 100) / 100
-  const off = discountPercent(product)
+  const variants = product.variants
+  const variant = variants[variantIdx] ?? variants[0]
+  const hasMultipleSizes = variants.length > 1
+  const unitPrice = variant.price
+  const compareAt = variant.compareAt
+  const off = discountPercent(variant)
 
   const add = () => {
     if (!inStock) return
     addItem(
       {
-        id: `${product.slug}-${size.ml}`,
+        id: `${product.slug}-${variant.label}`,
         slug: product.slug,
         name: product.name,
         image: product.image,
-        size: size.label,
+        size: variant.label,
         price: unitPrice,
-        whiteSku: product.whiteSku,
-        blackSku: product.blackSku,
+        whiteSku: variant.whiteSku,
+        blackSku: variant.blackSku,
       },
       qty,
     )
-    trackAddToCart(productToItem(product, { variant: size.label, price: unitPrice, quantity: qty }))
+    trackAddToCart(productToItem(product, { variant: variant.label, price: unitPrice, quantity: qty }))
   }
 
   return (
@@ -176,22 +179,28 @@ export function ProductDetail({ product }: { product: Product }) {
 
           <div className="mt-7">
             <p className="mb-3 text-sm font-medium text-foreground">Size</p>
-            <div className="grid grid-cols-3 gap-3">
-              {SIZES.map((s, i) => (
-                <button
-                  key={s.ml}
-                  onClick={() => setSizeIdx(i)}
-                  className={`border px-3 py-3 text-center transition-all ${
-                    i === sizeIdx ? 'border-foreground bg-foreground text-background' : 'border-border hover:border-foreground/60'
-                  }`}
-                >
-                  <span className="block text-sm font-semibold">{s.ml}ML</span>
-                  <span className={`block text-xs ${i === sizeIdx ? 'text-background/70' : 'text-muted-foreground'}`}>
-                    {formatPrice(Math.round(product.price * s.multiplier * 100) / 100)}
-                  </span>
-                </button>
-              ))}
-            </div>
+            {hasMultipleSizes ? (
+              <div className="flex flex-wrap gap-3">
+                {variants.map((v, i) => (
+                  <button
+                    key={v.whiteSku + v.label}
+                    onClick={() => setVariantIdx(i)}
+                    className={`min-w-[96px] border px-4 py-3 text-center transition-all ${
+                      i === variantIdx ? 'border-foreground bg-foreground text-background' : 'border-border hover:border-foreground/60'
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">{v.label}</span>
+                    <span className={`block text-xs ${i === variantIdx ? 'text-background/70' : 'text-muted-foreground'}`}>
+                      {formatPrice(v.price)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <span className="inline-flex items-center border border-border px-4 py-2.5 text-sm font-semibold text-foreground">
+                {variant.label}
+              </span>
+            )}
           </div>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
