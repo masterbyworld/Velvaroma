@@ -6,10 +6,14 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight, ShoppingBag, Star } from 'lucide-react'
 import { winningProducts, DEFAULT_SIZE, discountPercent, formatPrice } from '@/lib/products'
 import { useCart } from '@/lib/cart-context'
+import { useLiveStock } from '@/lib/use-live-stock'
 
 export function WinningProducts() {
   const { addItem } = useCart()
-  const [hero, ...rest] = winningProducts
+  const { isInStock } = useLiveStock()
+  // Never feature out-of-stock products on the homepage (live stock aware).
+  const available = winningProducts.filter((p) => isInStock(p.whiteSku, p.inStock))
+  const [hero, ...rest] = available
   const runners = rest.slice(0, 4)
 
   if (!hero) return null

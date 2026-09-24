@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Check, ChevronDown } from 'lucide-react'
 import { collections, productsByRouteKey } from '@/lib/products'
+import { useLiveStock } from '@/lib/use-live-stock'
 import { ProductCard } from '@/components/product-card'
 
 // A brand/collection browser: shows one house by default and lets the shopper
@@ -36,9 +37,15 @@ export function CollectionPicker({
   const [activeKey, setActiveKey] = useState(ordered[0]?.key ?? '')
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { isInStock } = useLiveStock()
 
   const active = ordered.find((c) => c.key === activeKey) ?? ordered[0]
-  const items = useMemo(() => (active ? productsByRouteKey(active.key).slice(0, limit) : []), [active, limit])
+  // Only surface in-stock products on the homepage (live Shopify stock aware).
+  const items = active
+    ? productsByRouteKey(active.key)
+        .filter((p) => isInStock(p.whiteSku, p.inStock))
+        .slice(0, limit)
+    : []
 
   useEffect(() => {
     if (!open) return
