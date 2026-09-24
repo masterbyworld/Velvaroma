@@ -25,6 +25,11 @@ function Instagram({ className }: { className?: string }) {
   )
 }
 
+const socialLinks = [
+  { Icon: Facebook, label: 'Facebook', href: 'https://web.facebook.com/profile.php?id=61593878290061#' },
+  { Icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/velva_roma_shop' },
+]
+
 const informationLinks: { label: string; href?: string; policy?: PolicyKey }[] = [
   { label: 'Search', href: '/shop' },
   { label: 'Customer Support', href: '/contact' },
@@ -114,13 +119,12 @@ export function SiteFooter() {
               Support@velvaroma.com
             </a>
             <div className="mt-5 flex gap-3">
-              {[
-                { Icon: Facebook, label: 'Facebook' },
-                { Icon: Instagram, label: 'Instagram' },
-              ].map(({ Icon, label }) => (
+              {socialLinks.map(({ Icon, label, href }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="flex h-11 w-11 items-center justify-center rounded-full bg-background text-foreground transition-transform hover:scale-105"
                 >
@@ -163,8 +167,18 @@ export function SiteFooter() {
               English <ChevronDown className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-3 md:hidden">
-              <a href="#" aria-label="Facebook" className="text-background/80 hover:text-background"><Facebook className="h-4 w-4" /></a>
-              <a href="#" aria-label="Instagram" className="text-background/80 hover:text-background"><Instagram className="h-4 w-4" /></a>
+              {socialLinks.map(({ Icon, label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="text-background/80 hover:text-background"
+                >
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
             </div>
           </div>
 
