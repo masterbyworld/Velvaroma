@@ -118,7 +118,7 @@ export default function CheckoutPage() {
             >
               {redirecting ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin" /> Redirecting to secure checkout…
+                  <Loader2 className="h-5 w-5 animate-spin" /> Proceeding…
                 </>
               ) : (
                 <>Proceed to Secure Checkout · {formatPrice(subtotal)}</>
