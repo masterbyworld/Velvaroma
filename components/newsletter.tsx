@@ -40,7 +40,7 @@ export function Newsletter() {
             />
             <button
               type="submit"
-              className="flex items-center justify-center gap-2 bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
+              className="flex items-center justify-center gap-2 bg-primary px-8 py-3.5 text-sm font-bold text-primary-foreground hover:bg-primary/90"
             >
               {done ? (
                 <>

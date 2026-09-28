@@ -37,7 +37,7 @@ export function FragranceCollection() {
       <div className="mt-12 flex justify-center">
         <Link
           href="/shop"
-          className="flex items-center gap-2 bg-primary px-10 py-4 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+          className="flex items-center gap-2 bg-primary px-10 py-4 text-sm font-bold text-primary-foreground hover:bg-primary/90"
         >
           Shop All Collections <ArrowRight className="h-4 w-4" />
         </Link>
