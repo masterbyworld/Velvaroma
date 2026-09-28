@@ -66,7 +66,7 @@ export function CartDrawer() {
                   <Link
                     href="/shop"
                     onClick={closeCart}
-                    className="mt-2 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
+                    className="mt-2 rounded-md bg-primary px-6 py-3 text-sm font-bold text-primary-foreground hover:bg-primary/90"
                   >
                     Shop Fragrances
                   </Link>
@@ -160,7 +160,7 @@ export function CartDrawer() {
                 <Link
                   href="/checkout"
                   onClick={closeCart}
-                  className="mt-4 flex w-full items-center justify-center bg-primary py-4 text-base font-semibold text-primary-foreground transition-transform hover:scale-[1.01]"
+                  className="mt-4 flex w-full items-center justify-center bg-primary py-4 text-base font-bold text-primary-foreground hover:bg-primary/90"
                 >
                   Check out
                 </Link>

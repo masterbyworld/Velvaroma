@@ -114,7 +114,7 @@ export default function CheckoutPage() {
             <button
               onClick={proceedToShopify}
               disabled={redirecting}
-              className="mt-8 flex w-full items-center justify-center gap-2 bg-primary py-4 text-base font-semibold text-primary-foreground transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-8 flex w-full items-center justify-center gap-2 bg-primary py-4 text-base font-bold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {redirecting ? (
                 <>

@@ -22,7 +22,7 @@ export function BrandSplit() {
         </p>
         <Link
               href="/shop?c=DM"
-          className="mt-8 inline-flex bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+          className="mt-8 inline-flex bg-primary px-8 py-4 text-sm font-bold text-primary-foreground hover:bg-primary/90"
         >
           View Collection
         </Link>

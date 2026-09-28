@@ -216,7 +216,7 @@ export function ProductDetail({ product }: { product: Product }) {
             {inStock ? (
               <button
                 onClick={add}
-                className="flex-1 bg-primary py-4 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.01]"
+                className="flex-1 bg-primary py-4 text-sm font-bold text-primary-foreground hover:bg-primary/90"
               >
                 Add to cart · {formatPrice(unitPrice * qty)}
               </button>
