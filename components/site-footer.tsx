@@ -70,11 +70,12 @@ export function SiteFooter() {
           {/* Brand */}
           <FooterSection title="Define Your Scent By Velvaroma" k="Brand" open={open} toggle={toggle}>
             <Image
-              src="/logo.png"
-              alt="Velvaroma Fragrance"
-              width={160}
-              height={80}
-              className="mt-2 h-16 w-auto brightness-0 invert"
+              src="/velvaroma-footer-logo.png"
+              alt="Velvaroma"
+              width={414}
+              height={348}
+              quality={100}
+              className="mt-2 h-32 w-auto md:h-40"
             />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-background/70">
               Premium ingredients, identical scent profiles, and exceptional lasting power — all priced to fit your everyday budget. Your signature scent shouldn&apos;t cost a fortune.
