@@ -6,6 +6,7 @@ import { Search, ChevronDown, Check } from 'lucide-react'
 import { products, collections, getCollectionByKey, type Product } from '@/lib/products'
 import { ProductCard } from '@/components/product-card'
 import { OfferShowcase } from '@/components/offer-showcase'
+import { CollectionPicker } from '@/components/collection-picker'
 
 const sorts = [
   { key: 'featured', label: 'Featured' },
@@ -129,6 +130,20 @@ export function ShopView({
         </div>
       )}
 
+      {collection && !searchMode ? (
+        <CollectionPicker
+          as="h1"
+          defaultBrand={collection.brand}
+          initialKey={collection.key}
+          heading="Shop by Collection"
+          description="Switch between houses below to discover their signature scents."
+          showOffer={false}
+          showViewAll={false}
+          limit={Number.POSITIVE_INFINITY}
+          onSelect={(key) => window.history.replaceState(null, '', `/shop?c=${key}`)}
+        />
+      ) : (
+      <>
       <div className="mb-8 text-center">
         <h1 className="text-4xl font-medium text-foreground md:text-5xl">
           {searchMode
@@ -278,6 +293,8 @@ export function ShopView({
             ))}
           </div>
         </section>
+      )}
+      </>
       )}
     </div>
   )
