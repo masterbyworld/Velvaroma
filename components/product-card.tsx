@@ -4,13 +4,12 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ShoppingBag, Star, Heart } from 'lucide-react'
-import { useCart } from '@/lib/cart-context'
 import { useLiveStock } from '@/lib/use-live-stock'
-import { type Product, DEFAULT_SIZE, discountPercent, formatPrice, normalizeSize } from '@/lib/products'
-import { productToItem, trackAddToCart } from '@/lib/tracking'
+import { useQuickAdd } from '@/lib/use-quick-add'
+import { type Product, discountPercent, formatPrice, normalizeSize } from '@/lib/products'
 
 export function ProductCard({ product }: { product: Product; index?: number }) {
-  const { addItem } = useCart()
+  const quickAddToCart = useQuickAdd()
   const { isInStock } = useLiveStock()
   const [wished, setWished] = useState(false)
   const off = discountPercent(product)
@@ -19,17 +18,7 @@ export function ProductCard({ product }: { product: Product; index?: number }) {
   function quickAdd(e: React.MouseEvent) {
     e.preventDefault()
     if (!inStock) return
-    addItem({
-      id: `${product.slug}-${DEFAULT_SIZE}`,
-      slug: product.slug,
-      name: product.name,
-      image: product.image,
-      size: DEFAULT_SIZE,
-      price: product.price,
-      whiteSku: product.whiteSku,
-      blackSku: product.blackSku,
-    })
-    trackAddToCart(productToItem(product, { variant: DEFAULT_SIZE, price: product.price, quantity: 1 }))
+    quickAddToCart(product)
   }
 
   function toggleWish(e: React.MouseEvent) {
