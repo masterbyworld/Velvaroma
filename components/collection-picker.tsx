@@ -3,7 +3,17 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Check, ChevronDown, Search } from 'lucide-react'
-import { collections, productsByRouteKey, type CollectionInfo } from '@/lib/products'
+import { collections, products, productsByRouteKey, type CollectionInfo } from '@/lib/products'
+
+export const ALL_KEY = 'all'
+
+const allCollection: CollectionInfo = {
+  key: ALL_KEY,
+  name: 'All Fragrances',
+  displayName: 'All Fragrances',
+  brand: '',
+  count: products.length,
+}
 import { useLiveStock } from '@/lib/use-live-stock'
 import { ProductCard } from '@/components/product-card'
 
@@ -24,8 +34,10 @@ export function CollectionPicker({
   showViewAll = true,
   initialKey,
   onSelect,
+  includeAll = false,
   as: HeadingTag = 'h2',
 }: {
+  includeAll?: boolean
   defaultBrand: string
   eyebrow?: string
   heading: string
@@ -37,15 +49,15 @@ export function CollectionPicker({
   onSelect?: (key: string) => void
   as?: 'h1' | 'h2'
 }) {
-  const ordered = useMemo(
-    () =>
-      [...collections].sort((a, b) => {
-        if (a.brand === defaultBrand) return -1
-        if (b.brand === defaultBrand) return 1
-        return b.count - a.count
-      }),
-    [defaultBrand],
-  )
+  const ordered = useMemo(() => {
+    const sorted = [...collections].sort((a, b) => {
+      if (a.brand === defaultBrand) return -1
+      if (b.brand === defaultBrand) return 1
+      return b.count - a.count
+    })
+    return includeAll ? [allCollection, ...sorted] : sorted
+  }, [defaultBrand, includeAll])
+  const houseCount = includeAll ? ordered.length - 1 : ordered.length
 
   const [activeKey, setActiveKeyState] = useState(
     ordered.find((c) => c.key === initialKey)?.key ?? ordered[0]?.key ?? '',
@@ -65,7 +77,9 @@ export function CollectionPicker({
 
   const active = ordered.find((c) => c.key === activeKey) ?? ordered[0]
   const available = active
-    ? productsByRouteKey(active.key).filter((p) => isInStock(p.whiteSku, p.inStock))
+    ? (active.key === ALL_KEY ? products : productsByRouteKey(active.key)).filter((p) =>
+        isInStock(p.whiteSku, p.inStock),
+      )
     : []
   const items = available.slice(0, limit)
   const menuOptions = ordered.filter((c) => matches(c, menuQuery))
@@ -198,7 +212,7 @@ export function CollectionPicker({
 
       <div className="mt-14 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <p className="text-sm font-medium uppercase tracking-[0.3em] text-foreground">
-          Switch brand house <span className="font-semibold">({ordered.length} houses)</span>
+          Switch brand house <span className="font-semibold">({houseCount} houses)</span>
         </p>
         <label className="flex w-full items-center gap-3 rounded-full border border-border bg-background px-5 py-3 focus-within:border-foreground md:max-w-md">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -256,7 +270,7 @@ export function CollectionPicker({
 
       <div className="mt-10 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-border pb-5">
         <h3 className="text-2xl font-bold uppercase tracking-tight text-foreground">
-          {active.displayName} Fragrance Line
+          {active.key === ALL_KEY ? 'All Fragrances' : `${active.displayName} Fragrance Line`}
         </h3>
         <span className="text-sm text-muted-foreground">
           Showing {items.length} product{items.length === 1 ? '' : 's'}
