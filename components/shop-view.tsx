@@ -6,7 +6,7 @@ import { Search, ChevronDown, Check } from 'lucide-react'
 import { products, collections, getCollectionByKey, type Product } from '@/lib/products'
 import { ProductCard } from '@/components/product-card'
 import { OfferShowcase } from '@/components/offer-showcase'
-import { CollectionPicker } from '@/components/collection-picker'
+import { ALL_KEY, CollectionPicker } from '@/components/collection-picker'
 
 const sorts = [
   { key: 'featured', label: 'Featured' },
@@ -130,17 +130,20 @@ export function ShopView({
         </div>
       )}
 
-      {collection && !searchMode ? (
+      {!searchMode ? (
         <CollectionPicker
           as="h1"
-          defaultBrand={collection.brand}
-          initialKey={collection.key}
-          heading="Shop by Collection"
+          includeAll
+          defaultBrand={collection?.brand ?? ''}
+          initialKey={collection?.key ?? ALL_KEY}
+          heading={collection ? 'Shop by Collection' : 'Shop All Fragrances'}
           description="Switch between houses below to discover their signature scents."
           showOffer={false}
           showViewAll={false}
           limit={Number.POSITIVE_INFINITY}
-          onSelect={(key) => window.history.replaceState(null, '', `/shop?c=${key}`)}
+          onSelect={(key) =>
+            window.history.replaceState(null, '', key === ALL_KEY ? '/shop' : `/shop?c=${key}`)
+          }
         />
       ) : (
       <>
