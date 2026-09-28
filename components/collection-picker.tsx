@@ -21,6 +21,9 @@ export function CollectionPicker({
   description,
   limit = 10,
   showOffer = true,
+  showViewAll = true,
+  initialKey,
+  onSelect,
   as: HeadingTag = 'h2',
 }: {
   defaultBrand: string
@@ -29,6 +32,9 @@ export function CollectionPicker({
   description?: string
   limit?: number
   showOffer?: boolean
+  showViewAll?: boolean
+  initialKey?: string
+  onSelect?: (key: string) => void
   as?: 'h1' | 'h2'
 }) {
   const ordered = useMemo(
@@ -41,7 +47,14 @@ export function CollectionPicker({
     [defaultBrand],
   )
 
-  const [activeKey, setActiveKey] = useState(ordered[0]?.key ?? '')
+  const [activeKey, setActiveKeyState] = useState(
+    ordered.find((c) => c.key === initialKey)?.key ?? ordered[0]?.key ?? '',
+  )
+
+  function setActiveKey(key: string) {
+    setActiveKeyState(key)
+    onSelect?.(key)
+  }
   const [open, setOpen] = useState(false)
   const [menuQuery, setMenuQuery] = useState('')
   const [pillQuery, setPillQuery] = useState('')
@@ -262,6 +275,7 @@ export function CollectionPicker({
         </p>
       )}
 
+      {showViewAll && (
       <div className="mt-12 flex justify-center">
         <Link
           href={`/shop?c=${active.key}`}
@@ -270,6 +284,7 @@ export function CollectionPicker({
           View all {active.displayName} products ({active.count}) <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
+      )}
     </div>
   )
 }
