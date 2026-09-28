@@ -14,22 +14,22 @@ type Slide = {
 
 const slides: Slide[] = [
   {
-    desktop: '/banners/baccarat.png',
-    mobile: '/banners/baccarat-mobile.jpg',
-    href: '/product/baccarat-rouge-540-extrait-de-parfum',
-    alt: 'Baccarat Rouge 540 — Pre-order, 70ML and 200ML available',
+    desktop: '/banners/silver-mountain-water.png',
+    mobile: '/banners/silver-mountain-water-mobile.png',
+    href: '/collections',
+    alt: 'Creed Silver Mountain Water — shop now',
   },
   {
-    desktop: '/banners/sospiro.png',
-    mobile: '/banners/sospiro-mobile.jpg',
-    href: '/product/sospiro-vibrato',
-    alt: 'Sospiro Discovery Set — Vibrato, Dolce Melodia, Maraschino',
+    desktop: '/banners/absolu-aventus.png',
+    mobile: '/banners/absolu-aventus-mobile.png',
+    href: '/collections',
+    alt: 'Creed Absolu Aventus — shop now',
   },
   {
-    desktop: '/banners/creed.png',
-    mobile: '/banners/creed-mobile.jpg',
-    href: '/product/wild-vetiver',
-    alt: 'New Creed Wild Vetiver decant — shop now',
+    desktop: '/banners/california-dream.png',
+    mobile: '/banners/california-dream-mobile.png',
+    href: '/collections',
+    alt: 'Louis Vuitton California Dream — shop now',
   },
 ]
 

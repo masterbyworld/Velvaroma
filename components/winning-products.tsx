@@ -83,9 +83,9 @@ export function WinningProducts() {
               <div className="mt-2 flex flex-wrap gap-3">
                 <button
                   onClick={() => add(hero)}
-                  className="flex items-center justify-center gap-2 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+                  className="flex items-center justify-center gap-2 rounded-md bg-foreground px-6 py-3 text-sm font-bold uppercase tracking-wider text-background hover:bg-foreground/90"
                 >
-                  <ShoppingBag className="h-4 w-4" /> Add to cart
+                  <ShoppingBag className="h-4 w-4" /> Add to Cart
                 </button>
                 <Link
                   href={`/product/${hero.slug}`}
@@ -134,9 +134,9 @@ export function WinningProducts() {
                     </div>
                     <button
                       onClick={() => add(p)}
-                      className="mt-3 flex items-center justify-center gap-2 bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02]"
+                      className="mt-3 flex items-center justify-center gap-2 rounded-md bg-foreground py-2.5 text-xs font-bold uppercase tracking-wider text-background ring-1 ring-background/20 hover:bg-foreground/90"
                     >
-                      <ShoppingBag className="h-4 w-4" /> Add
+                      <ShoppingBag className="h-3.5 w-3.5" /> Add to Cart
                     </button>
                   </div>
                 </motion.div>
