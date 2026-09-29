@@ -15,13 +15,14 @@ export function BrandSplit() {
         className="order-2 md:order-1"
       >
         <h2 className="text-balance text-4xl font-medium leading-tight text-foreground md:text-5xl">
-          Define Your Presence with Parfums de Marly.
+          Define Your Presence with Tom Ford.
         </h2>
         <p className="mt-6 max-w-md text-pretty leading-relaxed text-muted-foreground">
-          The essence of the Royal Fragrance Court. Discover noble ingredients crafted into powerful, signature scents for the elite.
+          Bold, provocative and unapologetically luxurious. Discover Tom Ford-inspired scents built on rich oud, velvet
+          vanilla, warm amber and white florals — made for those who own every room they enter.
         </p>
         <Link
-              href="/shop?c=DM"
+          href="/collections/tom-ford"
           className="mt-8 inline-flex bg-primary px-8 py-4 text-sm font-bold text-primary-foreground hover:bg-primary/90"
         >
           View Collection
@@ -36,11 +37,11 @@ export function BrandSplit() {
         className="relative order-1 aspect-square w-full overflow-hidden md:order-2"
       >
         <Image
-          src="/brands/parfums-de-marly-kv.jpg"
-          alt="Parfums de Marly campaign — a man walking beside the signature bottle"
+          src="/images/tom-ford-fucking-fabulous.png"
+          alt="Tom Ford Fucking Fabulous Eau de Parfum bottle surrounded by oud wood, white flowers, vanilla pods and amber"
           fill
           sizes="(min-width: 768px) 50vw, 100vw"
-          className="object-cover"
+          className="object-contain"
           priority
         />
       </motion.div>
