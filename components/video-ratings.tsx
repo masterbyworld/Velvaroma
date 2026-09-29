@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
+  ArrowRight,
   BadgeCheck,
   ChevronLeft,
   ChevronRight,
@@ -87,7 +88,7 @@ function ReelCard({
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-foreground/50 via-transparent to-foreground/80" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-foreground/50 via-transparent to-transparent" />
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between p-3">
           <span className="rounded-full border border-background/20 bg-foreground/30 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-background backdrop-blur-md">
@@ -107,17 +108,6 @@ function ReelCard({
           <span className="flex h-14 w-14 scale-75 items-center justify-center rounded-full border border-background/30 bg-background/15 text-background opacity-0 backdrop-blur-md transition-all duration-300 group-hover:scale-100 group-hover:opacity-100">
             <Maximize2 className="h-5 w-5" aria-hidden="true" />
           </span>
-        </div>
-
-        <div className="absolute inset-x-3 bottom-3 z-20 rounded-2xl border border-background/15 bg-foreground/40 p-3 backdrop-blur-xl">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-background/60">{reel.product.brand}</p>
-          <Link
-            href={`/product/${reel.product.slug}`}
-            className="mt-0.5 line-clamp-1 text-sm font-medium text-background underline-offset-4 hover:underline"
-          >
-            {reel.product.name}
-          </Link>
-          <p className="mt-1 text-xs font-semibold text-background/85">{formatPrice(reel.product.price)}</p>
         </div>
       </div>
     </motion.article>
@@ -384,6 +374,16 @@ export function VideoRatings() {
           {videos.map((reel, i) => (
             <ReelCard key={reel.src} reel={reel} index={i} onOpen={() => setOpenIndex(i)} />
           ))}
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/shop"
+            className="group inline-flex items-center gap-3 rounded-full border border-background/25 bg-background px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.25em] text-foreground transition-all duration-300 hover:-translate-y-0.5 hover:bg-transparent hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-background focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+          >
+            View All
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+          </Link>
         </div>
       </div>
 

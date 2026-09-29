@@ -104,7 +104,7 @@ export function SiteHeader() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-5">
+          <div className="flex shrink-0 items-center gap-3 sm:gap-5">
             <button onClick={() => setSearchOpen(true)} aria-label="Search" className="text-foreground hover:text-muted-foreground">
               <Search className="h-5 w-5" />
             </button>

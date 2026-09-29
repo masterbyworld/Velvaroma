@@ -86,8 +86,22 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+    /* clip prevents horizontal scroll without creating a scroll container, so sticky headers keep working */
+    overflow-x: clip;
+  }
   body {
     @apply bg-background text-foreground font-sans;
+  }
+  img,
+  video,
+  svg,
+  canvas,
+  iframe {
+    max-width: 100%;
   }
   h1, h2, h3, h4 {
     @apply font-sans tracking-tight;
