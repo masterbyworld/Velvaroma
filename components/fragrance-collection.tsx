@@ -1,85 +1,111 @@
 'use client'
 
-import { useMemo, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gift } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gift, Pause, Play } from 'lucide-react'
 import { collections, type CollectionInfo } from '@/lib/products'
 
-const GLASS =
-  'border border-background/10 bg-background/[0.04] backdrop-blur-xl shadow-[inset_0_1px_0_0_rgb(255_255_255/0.06)]'
-
 const SPOTLIGHT_BRANDS = ['YSL', 'Tom Ford', 'Creed', 'Chanel']
+const FEATURED_COUNT = 10
+const AUTOPLAY_MS = 2000
 
 type Filter = 'popular' | 'a-z'
 
-function initials(name: string) {
-  const words = name.replace(/[^A-Za-z0-9 ]/g, '').split(/\s+/).filter(Boolean)
-  if (words.length === 1) {
-    const w = words[0]
-    return w.length <= 3 && w === w.toUpperCase() ? w : w[0].toUpperCase()
-  }
-  return words
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-}
-
-function SpotlightCard({ c, index }: { c: CollectionInfo; index: number }) {
+function FeaturedCard({
+  c,
+  index,
+  active,
+  playing,
+  onActivate,
+  cardRef,
+}: {
+  c: CollectionInfo
+  index: number
+  active: boolean
+  playing: boolean
+  onActivate: () => void
+  cardRef: (el: HTMLLIElement | null) => void
+}) {
   return (
-    <motion.li
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.6, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className="flex"
+    <li
+      ref={cardRef}
+      role="group"
+      aria-roledescription="slide"
+      aria-label={`${index + 1} of ${FEATURED_COUNT}: ${c.displayName}`}
+      className="flex shrink-0 snap-center py-3"
     >
       <Link
         href={`/shop?c=${c.key}`}
-        className={`group relative flex w-full flex-col justify-between gap-8 overflow-hidden rounded-2xl p-4 transition-all sm:gap-10 sm:rounded-3xl sm:p-6 duration-500 hover:-translate-y-1 hover:scale-[1.02] hover:border-highlight/50 hover:shadow-2xl hover:shadow-highlight/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight md:p-7 ${GLASS}`}
+        draggable={false}
+        onFocus={onActivate}
+        onMouseEnter={onActivate}
+        className={`group relative flex h-40 w-44 flex-col justify-between overflow-hidden rounded-2xl border-2 p-4 transition-all duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 sm:h-44 sm:w-52 sm:p-5 ${
+          active
+            ? 'scale-[1.04] border-foreground bg-foreground text-background shadow-xl shadow-foreground/15'
+            : 'border-foreground/15 bg-background text-foreground hover:border-foreground'
+        }`}
       >
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-6 -right-2 select-none text-8xl font-semibold leading-none tracking-tighter text-background/[0.05] transition-colors duration-500 group-hover:text-highlight/15 md:text-9xl"
-        >
-          {initials(c.displayName)}
-        </span>
-
-        <div className="relative flex items-start justify-between gap-4">
-          <span className="rounded-full border border-background/15 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-background/60 sm:px-3 sm:text-[11px]">
-            House
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className={`text-[10px] font-semibold uppercase tracking-[0.25em] transition-colors duration-500 ${
+              active ? 'text-background/60' : 'text-foreground/50'
+            }`}
+          >
+            {String(index + 1).padStart(2, '0')} / House
           </span>
-          <span className="flex h-8 w-8 items-center sm:h-10 sm:w-10 justify-center rounded-full border border-background/15 text-background/70 transition-all duration-500 group-hover:rotate-45 group-hover:border-highlight group-hover:bg-highlight group-hover:text-highlight-foreground">
-            <ArrowUpRight className="h-4 w-4" />
+          <span
+            className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-500 group-hover:rotate-45 ${
+              active ? 'border-background bg-background text-foreground' : 'border-foreground/20 text-foreground'
+            }`}
+          >
+            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </span>
         </div>
 
-        <div className="relative flex flex-col gap-2">
-          <h3 className="text-balance text-2xl font-light sm:text-3xl leading-none tracking-tight md:text-4xl">{c.displayName}</h3>
-          <p className="text-sm text-background/55">
-            <span className="font-semibold text-highlight">{c.count}</span> signature scents
+        <div className="flex flex-col gap-1">
+          <h3 className="text-balance text-xl font-bold leading-tight tracking-tight sm:text-2xl">{c.displayName}</h3>
+          <p className={`text-xs transition-colors duration-500 ${active ? 'text-background/70' : 'text-foreground/60'}`}>
+            <span className="font-bold">{c.count}</span> signature scents
           </p>
         </div>
+
+        <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-background/15">
+          {active && (
+            <motion.span
+              key={`${c.key}-${playing}`}
+              className="block h-full origin-left bg-background"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: playing ? 1 : 0 }}
+              transition={{ duration: playing ? AUTOPLAY_MS / 1000 : 0.2, ease: 'linear' }}
+            />
+          )}
+        </span>
       </Link>
-    </motion.li>
+    </li>
   )
 }
 
 export function FragranceCollection() {
+  const reduceMotion = useReducedMotion()
   const [filter, setFilter] = useState<Filter>('popular')
+  const [active, setActive] = useState(0)
+  const [userPaused, setUserPaused] = useState(false)
+  const [hovering, setHovering] = useState(false)
+  const [inView, setInView] = useState(false)
+
+  const sectionRef = useRef<HTMLElement>(null)
+  const trackRef = useRef<HTMLUListElement>(null)
+  const cardRefs = useRef<(HTMLLIElement | null)[]>([])
   const railRef = useRef<HTMLDivElement>(null)
   const drag = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false })
 
-  const spotlight = useMemo(() => {
+  const featured = useMemo(() => {
     const picked = SPOTLIGHT_BRANDS.map((name) =>
       collections.find((c) => c.displayName.toLowerCase() === name.toLowerCase()),
     ).filter((c): c is CollectionInfo => Boolean(c))
-    if (picked.length >= 4) return picked
-    const extra = [...collections]
-      .sort((a, b) => b.count - a.count)
-      .filter((c) => !picked.includes(c))
-    return [...picked, ...extra].slice(0, 4)
+    const rest = [...collections].sort((a, b) => b.count - a.count).filter((c) => !picked.includes(c))
+    return [...picked, ...rest].slice(0, FEATURED_COUNT)
   }, [])
 
   const railItems = useMemo(() => {
@@ -89,11 +115,36 @@ export function FragranceCollection() {
       : list.sort((a, b) => a.displayName.localeCompare(b.displayName))
   }, [filter])
 
-  function scrollRail(dir: 1 | -1) {
-    const el = railRef.current
+  const playing = !userPaused && !hovering && inView && !reduceMotion
+
+  const go = useCallback(
+    (dir: 1 | -1) => setActive((i) => (i + dir + featured.length) % featured.length),
+    [featured.length],
+  )
+
+  useEffect(() => {
+    const el = sectionRef.current
     if (!el) return
-    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' })
-  }
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.3 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!playing) return
+    const id = window.setTimeout(() => go(1), AUTOPLAY_MS)
+    return () => window.clearTimeout(id)
+  }, [playing, active, go])
+
+  useEffect(() => {
+    const track = trackRef.current
+    const card = cardRefs.current[active]
+    if (!track || !card) return
+    track.scrollTo({
+      left: card.offsetLeft - (track.clientWidth - card.clientWidth) / 2,
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    })
+  }, [active, reduceMotion])
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     if (e.pointerType !== 'mouse' || !railRef.current) return
@@ -112,101 +163,137 @@ export function FragranceCollection() {
     drag.current.active = false
   }
 
+  const controlBtn =
+    'flex h-10 w-10 items-center justify-center rounded-full border-2 border-foreground text-foreground transition-all duration-300 hover:bg-foreground hover:text-background active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2'
+
   return (
     <section
+      ref={sectionRef}
       aria-labelledby="fragrance-collection-heading"
-      className="relative overflow-hidden bg-foreground py-20 text-background md:py-28"
+      className="relative overflow-hidden bg-background py-16 text-foreground md:py-24"
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-4 md:gap-16 md:px-8">
-        <div className="flex flex-col items-center gap-6 text-center">
-          <div
-            className={`inline-flex items-center gap-3 rounded-full py-1.5 pl-1.5 pr-4 text-xs md:text-sm ${GLASS}`}
-          >
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sale px-3 py-1 font-semibold uppercase tracking-wider text-background">
+      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 md:gap-12 md:px-8">
+        <div className="flex flex-col items-center gap-5 text-center">
+          <div className="inline-flex items-center gap-3 rounded-full border-2 border-foreground py-1 pl-1 pr-4 text-xs md:text-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-sale px-3 py-1 font-bold uppercase tracking-wider text-background">
               <Gift className="h-3.5 w-3.5" aria-hidden="true" />
               Buy 2, Get 1 Free
             </span>
-            <span className="text-background/70">Add any 3 — pay for only 2</span>
+            <span className="font-medium text-foreground/70">Add any 3 — pay for only 2</span>
           </div>
 
           <h2
             id="fragrance-collection-heading"
-            className="text-balance text-4xl font-light leading-none tracking-tight md:text-6xl"
+            className="text-balance text-4xl font-bold uppercase leading-none tracking-tight md:text-6xl"
           >
-            The Fragrance <span className="font-semibold italic">Collection</span>
+            The Fragrance Collection
           </h2>
-          <p className="max-w-xl text-pretty leading-relaxed text-background/60">
+          <p className="max-w-xl text-pretty leading-relaxed text-foreground/60">
             {collections.length} celebrated houses, reimagined. Choose a maison to explore its signature line —
             limited time offer at Velvaroma.
           </p>
         </div>
 
-        <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
-          {spotlight.map((c, i) => (
-            <SpotlightCard key={c.key} c={c} index={i} />
-          ))}
-        </ul>
-
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <p className="text-xs font-medium uppercase tracking-[0.3em] text-background/50">All houses</p>
-              <div role="tablist" aria-label="Sort houses" className={`flex rounded-full p-1 ${GLASS}`}>
-                {(
-                  [
-                    ['popular', 'Most loved'],
-                    ['a-z', 'A – Z'],
-                  ] as const
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    role="tab"
-                    aria-selected={filter === value}
-                    onClick={() => {
-                      setFilter(value)
-                      railRef.current?.scrollTo({ left: 0, behavior: 'smooth' })
-                    }}
-                    className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-300 ${
-                      filter === value
-                        ? 'bg-background text-foreground shadow'
-                        : 'text-background/60 hover:text-background'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="hidden items-center gap-2 sm:flex">
+        <div
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Featured fragrance houses"
+          className="flex flex-col gap-5"
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={() => setHovering(false)}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-xs font-bold uppercase tracking-[0.3em]">Featured houses</p>
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => scrollRail(-1)}
-                aria-label="Scroll houses left"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-background/15 text-background/70 transition-all hover:border-highlight hover:bg-highlight hover:text-highlight-foreground active:scale-95"
+                onClick={() => setUserPaused((p) => !p)}
+                aria-label={userPaused ? 'Play carousel' : 'Pause carousel'}
+                className={controlBtn}
               >
+                {userPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+              </button>
+              <button type="button" onClick={() => go(-1)} aria-label="Previous house" className={controlBtn}>
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <button
-                type="button"
-                onClick={() => scrollRail(1)}
-                aria-label="Scroll houses right"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-background/15 text-background/70 transition-all hover:border-highlight hover:bg-highlight hover:text-highlight-foreground active:scale-95"
-              >
+              <button type="button" onClick={() => go(1)} aria-label="Next house" className={controlBtn}>
                 <ChevronRight className="h-4 w-4" />
               </button>
+            </div>
+          </div>
+
+          <ul
+            ref={trackRef}
+            aria-live={playing ? 'off' : 'polite'}
+            className="flex gap-3 overflow-x-auto px-2 [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden"
+          >
+            {featured.map((c, i) => (
+              <FeaturedCard
+                key={c.key}
+                c={c}
+                index={i}
+                active={i === active}
+                playing={playing}
+                onActivate={() => setActive(i)}
+                cardRef={(el) => {
+                  cardRefs.current[i] = el
+                }}
+              />
+            ))}
+          </ul>
+
+          <div className="flex justify-center gap-1.5" aria-hidden="true">
+            {featured.map((c, i) => (
+              <button
+                key={c.key}
+                type="button"
+                tabIndex={-1}
+                onClick={() => setActive(i)}
+                className={`h-1.5 rounded-full transition-all duration-500 ${
+                  i === active ? 'w-8 bg-foreground' : 'w-1.5 bg-foreground/20 hover:bg-foreground/50'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-5 border-t-2 border-foreground/10 pt-8">
+          <div className="flex items-center gap-4">
+            <p className="text-xs font-bold uppercase tracking-[0.3em]">All houses</p>
+            <div role="tablist" aria-label="Sort houses" className="flex rounded-full border-2 border-foreground p-0.5">
+              {(
+                [
+                  ['popular', 'Most loved'],
+                  ['a-z', 'A – Z'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  aria-selected={filter === value}
+                  onClick={() => {
+                    setFilter(value)
+                    railRef.current?.scrollTo({ left: 0, behavior: 'smooth' })
+                  }}
+                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-300 ${
+                    filter === value ? 'bg-foreground text-background' : 'text-foreground/60 hover:text-foreground'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="relative">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-foreground to-transparent"
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-foreground to-transparent"
+              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent"
             />
             <div
               ref={railRef}
@@ -221,17 +308,17 @@ export function FragranceCollection() {
                   drag.current.moved = false
                 }
               }}
-              className="flex cursor-grab snap-x gap-3 overflow-x-auto scroll-smooth px-1 py-2 [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden"
+              className="flex cursor-grab snap-x gap-2.5 overflow-x-auto scroll-smooth px-1 py-2 [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden"
             >
               {railItems.map((c) => (
                 <Link
                   key={c.key}
                   href={`/shop?c=${c.key}`}
                   draggable={false}
-                  className={`group flex shrink-0 snap-start items-center gap-3 rounded-full py-2 pl-5 pr-2 text-sm font-medium text-background/85 transition-all duration-300 hover:-translate-y-0.5 hover:border-highlight/60 hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight ${GLASS}`}
+                  className="group flex shrink-0 snap-start items-center gap-2.5 rounded-full border-2 border-foreground/15 bg-background py-1.5 pl-4 pr-1.5 text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
                 >
                   <span className="whitespace-nowrap">{c.displayName}</span>
-                  <span className="rounded-full bg-background/10 px-2.5 py-1 text-xs tabular-nums text-background/60 transition-colors duration-300 group-hover:bg-highlight group-hover:text-highlight-foreground">
+                  <span className="rounded-full bg-foreground/5 px-2.5 py-0.5 text-xs tabular-nums text-foreground/60 transition-colors duration-300 group-hover:bg-foreground group-hover:text-background">
                     {c.count}
                   </span>
                 </Link>
@@ -243,10 +330,10 @@ export function FragranceCollection() {
         <div className="flex justify-center">
           <Link
             href="/shop"
-            className="group inline-flex items-center gap-3 rounded-full bg-background py-2 pl-7 pr-2 text-sm font-semibold text-foreground transition-all duration-300 hover:bg-highlight hover:text-highlight-foreground active:scale-[0.98]"
+            className="group inline-flex items-center gap-3 rounded-full bg-foreground py-2 pl-7 pr-2 text-sm font-bold text-background transition-all duration-300 hover:shadow-lg hover:shadow-foreground/20 active:scale-[0.98]"
           >
             Shop All Collections
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background transition-transform duration-300 group-hover:translate-x-1">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-foreground transition-transform duration-300 group-hover:translate-x-1">
               <ArrowRight className="h-4 w-4" />
             </span>
           </Link>
