@@ -8,6 +8,7 @@ import { Minus, Plus, Star, Truck, Clock, PackageCheck } from 'lucide-react'
 import { formatPrice, discountPercent, type Product } from '@/lib/products'
 import { useCart } from '@/lib/cart-context'
 import { useLiveStock } from '@/lib/use-live-stock'
+import { BundleOfferCard } from '@/components/offer-showcase'
 import { productToItem, trackAddToCart, trackViewItem } from '@/lib/tracking'
 
 const GALLERY_ROTATE_MS = 3000
@@ -162,19 +163,8 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-md">
-            <div className="flex items-center gap-2 bg-sale px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white">
-              <Clock className="h-4 w-4" /> Today&apos;s Special
-            </div>
-            <div className="border border-t-0 border-border px-4 py-3">
-              <p className="text-sm text-foreground">
-                Limited Offer: <span className="font-semibold">Buy 2</span> &amp; Get{' '}
-                <span className="font-bold text-sale">1 FREE ON ALL PRODUCTS</span>
-              </p>
-              <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-sale">
-                <Clock className="h-4 w-4" /> Claim this deal before the timer runs out.
-              </p>
-            </div>
+          <div className="mt-4">
+            <BundleOfferCard />
           </div>
 
           <div className="mt-7">
