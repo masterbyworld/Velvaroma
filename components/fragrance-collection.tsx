@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gift, Pause, Play } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { collections, type CollectionInfo } from '@/lib/products'
+import { BundleOfferCard } from '@/components/offer-showcase'
 
 const SPOTLIGHT_BRANDS = ['YSL', 'Tom Ford', 'Creed', 'Chanel']
 const FEATURED_COUNT = 10
@@ -86,7 +87,7 @@ function FeaturedCard({
   )
 }
 
-export function FragranceCollection() {
+export function FragranceCollection({ showOffer = true }: { showOffer?: boolean }) {
   const reduceMotion = useReducedMotion()
   const [filter, setFilter] = useState<Filter>('popular')
   const [active, setActive] = useState(0)
@@ -174,13 +175,7 @@ export function FragranceCollection() {
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 md:gap-12 md:px-8">
         <div className="flex flex-col items-center gap-5 text-center">
-          <div className="inline-flex items-center gap-3 rounded-full border-2 border-foreground py-1 pl-1 pr-4 text-xs md:text-sm">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sale px-3 py-1 font-bold uppercase tracking-wider text-background">
-              <Gift className="h-3.5 w-3.5" aria-hidden="true" />
-              Buy 2, Get 1 Free
-            </span>
-            <span className="font-medium text-foreground/70">Add any 3 — pay for only 2</span>
-          </div>
+          {showOffer && <BundleOfferCard className="max-w-xl" />}
 
           <h2
             id="fragrance-collection-heading"

@@ -92,9 +92,6 @@ export function CartDrawer() {
                             <span className="text-muted-foreground">Size:</span> {item.size}
                           </p>
                           <p className="mt-1 text-[15px] font-medium text-foreground">{formatPrice(item.price)}</p>
-                          <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-sale">
-                            <span aria-hidden>🏷</span> TODAY SPECIAL : BUY 2 GET 1 FREE.
-                          </p>
                           <div className="mt-3 flex items-center gap-4">
                             <div className="flex items-center bg-muted">
                               <button

@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Check, ChevronDown, Search } from 'lucide-react'
 import { collections, products, productsByRouteKey, type CollectionInfo } from '@/lib/products'
+import { BundleOfferCard } from '@/components/offer-showcase'
 
 export const ALL_KEY = 'all'
 
@@ -128,12 +129,7 @@ export function CollectionPicker({
         {description && (
           <p className="mt-4 max-w-2xl text-pretty leading-relaxed text-muted-foreground">{description}</p>
         )}
-        {showOffer && (
-          <p className="mt-6 inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-full bg-sale px-6 py-2 text-sm text-primary-foreground">
-            <span className="font-bold uppercase tracking-wide">Special Offer</span>
-            <span>Buy 2, Get 1 free auto-applied at checkout</span>
-          </p>
-        )}
+        {showOffer && <BundleOfferCard className="mt-8 max-w-xl text-left" />}
       </div>
 
       <div className="mt-10 flex flex-col items-center gap-4">
