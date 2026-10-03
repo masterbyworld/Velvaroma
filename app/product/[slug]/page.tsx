@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ProductDetail } from '@/components/product-detail'
-import { OfferShowcase } from '@/components/offer-showcase'
 import { UrgencySection } from '@/components/urgency-section'
 import { ProductTabs } from '@/components/product-tabs'
 import { HappyCustomers } from '@/components/happy-customers'
@@ -48,14 +47,13 @@ export default async function ProductPage({
     <main>
       <SiteHeader />
       <ProductDetail product={product} />
-      <OfferShowcase />
       <UrgencySection />
       <ProductTabs product={product} />
       <section id="reviews">
         <HappyCustomers />
       </section>
       <WhyVelvaroma />
-      <FragranceCollection />
+      <FragranceCollection showOffer={false} />
       <RelatedByBrand products={related} brand={product.brand} />
       <VideoRatings />
       <RecentlyViewed currentSlug={slug} />
