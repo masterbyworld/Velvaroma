@@ -10,7 +10,7 @@ import { HappyCustomers } from '@/components/happy-customers'
 import { WhyVelvaroma } from '@/components/why-velvaroma'
 import { FragranceCollection } from '@/components/fragrance-collection'
 import { RelatedByBrand } from '@/components/related-by-brand'
-import { ProductVideos } from '@/components/product-videos'
+import { VideoRatings } from '@/components/video-ratings'
 import { RecentlyViewed } from '@/components/recently-viewed'
 import { InstagramSupport } from '@/components/instagram-support'
 import { getProduct, products, relatedProducts } from '@/lib/products'
@@ -57,7 +57,7 @@ export default async function ProductPage({
       <WhyVelvaroma />
       <FragranceCollection />
       <RelatedByBrand products={related} brand={product.brand} />
-      <ProductVideos />
+      <VideoRatings />
       <RecentlyViewed currentSlug={slug} />
       <InstagramSupport />
       <SiteFooter />
