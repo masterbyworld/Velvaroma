@@ -4,6 +4,7 @@ import { useCallback } from 'react'
 import { useCart } from '@/lib/cart-context'
 import { type Product, DEFAULT_SIZE } from '@/lib/products'
 import { productToItem, trackAddToCart } from '@/lib/tracking'
+import { useLiveStock } from '@/lib/use-live-stock'
 
 type QuickAddProduct = Pick<Product, 'slug' | 'name' | 'image' | 'price' | 'whiteSku' | 'blackSku' | 'brand'>
 
@@ -11,9 +12,11 @@ type QuickAddProduct = Pick<Product, 'slug' | 'name' | 'image' | 'price' | 'whit
 // cards) so each one pushes the same GA4 add_to_cart payload as the product page.
 export function useQuickAdd() {
   const { addItem } = useCart()
+  const { priceOf } = useLiveStock()
 
   return useCallback(
     (product: QuickAddProduct, quantity = 1) => {
+      const { price } = priceOf(product.blackSku, { price: product.price, compareAt: 0 })
       addItem(
         {
           id: `${product.slug}-${DEFAULT_SIZE}`,
@@ -21,14 +24,14 @@ export function useQuickAdd() {
           name: product.name,
           image: product.image,
           size: DEFAULT_SIZE,
-          price: product.price,
+          price,
           whiteSku: product.whiteSku,
           blackSku: product.blackSku,
         },
         quantity,
       )
-      trackAddToCart(productToItem(product, { variant: DEFAULT_SIZE, price: product.price, quantity }))
+      trackAddToCart(productToItem(product, { variant: DEFAULT_SIZE, price, quantity }))
     },
-    [addItem],
+    [addItem, priceOf],
   )
 }

@@ -10,10 +10,11 @@ import { type Product, discountPercent, formatPrice, normalizeSize } from '@/lib
 
 export function ProductCard({ product }: { product: Product; index?: number }) {
   const quickAddToCart = useQuickAdd()
-  const { isInStock } = useLiveStock()
+  const { isInStock, priceOf } = useLiveStock()
   const [wished, setWished] = useState(false)
-  const off = discountPercent(product)
-  const inStock = isInStock(product.whiteSku, product.inStock)
+  const live = priceOf(product.blackSku, product)
+  const off = discountPercent(live)
+  const inStock = isInStock(product.blackSku, product.inStock)
 
   function quickAdd(e: React.MouseEvent) {
     e.preventDefault()
@@ -92,9 +93,9 @@ export function ProductCard({ product }: { product: Product; index?: number }) {
         </div>
 
         <div className="mt-2 flex flex-wrap items-baseline justify-center gap-x-2">
-          <span className="text-base font-bold text-sale">{formatPrice(product.price)}</span>
-          {product.compareAt > product.price && (
-            <span className="text-xs text-muted-foreground line-through">{formatPrice(product.compareAt)}</span>
+          <span className="text-base font-bold text-sale">{formatPrice(live.price)}</span>
+          {live.compareAt > live.price && (
+            <span className="text-xs text-muted-foreground line-through">{formatPrice(live.compareAt)}</span>
           )}
         </div>
 

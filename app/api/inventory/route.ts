@@ -1,27 +1,23 @@
 import { NextResponse } from 'next/server'
-import { products } from '@/lib/products'
-import { getLiveStockByWhiteSkus } from '@/lib/shopify'
+import { getLiveCatalog } from '@/lib/live-catalog'
 
-// Live inventory sync endpoint. Resolves every storefront product's White SKU
-// against Shopify and returns its purchasable status, so the client can flip
-// products to "out of stock" the moment Shopify unlists or zeroes them out.
+// Live price + inventory feed for the storefront, keyed by CSV (Black) SKU.
+// Matched variants carry Shopify's live price/compare-at/availability;
+// unmatched ones carry the CSV fallback values.
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
-  const whiteSkus = products.map((p) => p.whiteSku).filter(Boolean)
-
-  try {
-    const stock = await getLiveStockByWhiteSkus(whiteSkus)
-    return NextResponse.json(
-      { stock },
-      // Cache at the edge for a minute; serve stale while revalidating so a
-      // burst of shoppers never all trigger a fresh catalog scan at once.
-      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } },
-    )
-  } catch (err) {
-    // Fail open: if Shopify is unreachable, return an empty map so the client
-    // falls back to the catalog's baseline inStock rather than hiding the store.
-    console.error('[v0] inventory sync failed:', err instanceof Error ? err.message : err)
-    return NextResponse.json({ stock: {}, error: 'inventory_unavailable' }, { status: 200 })
+  const live = await getLiveCatalog()
+  const stock: Record<string, boolean> = {}
+  const prices: Record<string, { price: number; compareAt: number }> = {}
+  for (const v of live.variants) {
+    const sku = v.variant.blackSku
+    stock[sku] = v.inStock
+    prices[sku] = { price: v.price, compareAt: v.compareAt }
   }
+  return NextResponse.json(
+    { stock, prices, shopifyAvailable: live.shopifyAvailable },
+    { headers: { 'Cache-Control': 'no-store' } },
+  )
 }

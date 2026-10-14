@@ -12,6 +12,7 @@ export type Variant = {
   compareAt: number
   whiteSku: string
   blackSku: string
+  inStock: boolean
 }
 
 export type Product = {
@@ -134,17 +135,16 @@ function toProduct(p: RawProduct): Product {
     whiteSku: p.whiteSku,
     blackSku: p.blackSku,
     size: normalizeSize(p.size),
-    // Each Shopify product in the backup is a single variant, so we map its own
-    // real size, price, compare-at, and SKU pair — no fabricated size ladder.
-    variants: [
-      {
-        label: normalizeSize(p.size),
-        price: p.price,
-        compareAt: p.compareAt,
-        whiteSku: p.whiteSku,
-        blackSku: p.blackSku,
-      },
-    ],
+    // Every size row in the CSV is its own Shopify variant with its own SKU,
+    // CSV price (the fallback), and compare-at.
+    variants: p.variants.map((v) => ({
+      label: normalizeSize(v.label),
+      price: v.price,
+      compareAt: v.compareAt,
+      whiteSku: v.whiteSku,
+      blackSku: v.blackSku,
+      inStock: v.inStock,
+    })),
     inStock: p.inStock,
   }
 }
@@ -157,6 +157,21 @@ export const products: Product[] = (catalog.products as RawProduct[]).map(toProd
 
 const bySlug = new Map(products.map((p) => [p.slug, p]))
 const byWhiteSku = new Map(products.map((p) => [p.whiteSku, p]))
+
+export type CatalogVariant = { product: Product; variant: Variant }
+
+// Every CSV variant, keyed by its Black SKU (the Shopify-facing SKU).
+export const allVariants: CatalogVariant[] = products.flatMap((product) =>
+  product.variants.map((variant) => ({ product, variant })),
+)
+const byBlackSku = new Map(allVariants.map((cv) => [cv.variant.blackSku.toUpperCase(), cv]))
+const byVariantWhiteSku = new Map(allVariants.map((cv) => [cv.variant.whiteSku.toUpperCase(), cv]))
+
+/** Resolve a cart line's SKU (Black preferred, White accepted) to its catalog variant. */
+export function getVariantBySku(sku: string): CatalogVariant | undefined {
+  const key = sku.trim().toUpperCase()
+  return byBlackSku.get(key) ?? byVariantWhiteSku.get(key)
+}
 
 // "Top Wanted" — most-reviewed, in-stock products (10 for the homepage grid).
 export const topWanted: Product[] = [...products]

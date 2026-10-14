@@ -24,8 +24,7 @@ function deliveryWindow() {
 
 export function ProductDetail({ product }: { product: Product }) {
   const { addItem } = useCart()
-  const { isInStock } = useLiveStock()
-  const inStock = isInStock(product.whiteSku, product.inStock)
+  const { isInStock, priceOf } = useLiveStock()
   const [variantIdx, setVariantIdx] = useState(0)
   const [qty, setQty] = useState(1)
   const [active, setActive] = useState(0)
@@ -51,9 +50,11 @@ export function ProductDetail({ product }: { product: Product }) {
   const variants = product.variants
   const variant = variants[variantIdx] ?? variants[0]
   const hasMultipleSizes = variants.length > 1
-  const unitPrice = variant.price
-  const compareAt = variant.compareAt
-  const off = discountPercent(variant)
+  const livePrice = priceOf(variant.blackSku, variant)
+  const unitPrice = livePrice.price
+  const compareAt = livePrice.compareAt
+  const off = discountPercent(livePrice)
+  const inStock = isInStock(variant.blackSku, variant.inStock)
 
   const add = () => {
     if (!inStock) return
@@ -173,7 +174,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <div className="flex flex-wrap gap-3">
                 {variants.map((v, i) => (
                   <button
-                    key={v.whiteSku + v.label}
+                    key={v.blackSku}
                     onClick={() => setVariantIdx(i)}
                     className={`min-w-[96px] border px-4 py-3 text-center transition-all ${
                       i === variantIdx ? 'border-foreground bg-foreground text-background' : 'border-border hover:border-foreground/60'
@@ -181,7 +182,7 @@ export function ProductDetail({ product }: { product: Product }) {
                   >
                     <span className="block text-sm font-semibold">{v.label}</span>
                     <span className={`block text-xs ${i === variantIdx ? 'text-background/70' : 'text-muted-foreground'}`}>
-                      {formatPrice(v.price)}
+                      {formatPrice(priceOf(v.blackSku, v).price)}
                     </span>
                   </button>
                 ))}
