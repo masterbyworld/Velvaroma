@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useLiveStock } from '@/lib/use-live-stock'
 
 const STORAGE_KEY = 'velvaroma:cart'
 
@@ -133,12 +134,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [state.items, hydrated])
 
+  const { priceOf } = useLiveStock()
+
   const value = useMemo<CartContextValue>(() => {
-    const count = state.items.reduce((n, i) => n + i.quantity, 0)
-    const rawSubtotal = state.items.reduce((n, i) => n + i.price * i.quantity, 0)
-    const { freeCount, discount } = computeDeal(state.items)
+    // Re-price every line from live Shopify data so subtotals and the
+    // Buy 2 Get 1 discount match what Shopify will charge at checkout.
+    const items = state.items.map((i) => ({
+      ...i,
+      price: priceOf(i.blackSku, { price: i.price, compareAt: 0 }).price,
+    }))
+    const count = items.reduce((n, i) => n + i.quantity, 0)
+    const rawSubtotal = items.reduce((n, i) => n + i.price * i.quantity, 0)
+    const { freeCount, discount } = computeDeal(items)
     return {
-      items: state.items,
+      items,
       count,
       rawSubtotal,
       discount,
@@ -155,7 +164,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setQuantity: (id, quantity) => dispatch({ type: 'SET_QTY', id, quantity }),
       clear: () => dispatch({ type: 'CLEAR' }),
     }
-  }, [state.items, isOpen])
+  }, [state.items, isOpen, priceOf])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

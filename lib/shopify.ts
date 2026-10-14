@@ -95,129 +95,167 @@ async function storefront<T>(query: string, variables: Record<string, unknown>):
   throw lastError ?? new Error('Shopify request failed')
 }
 
-/** Translate a Black (replica) SKU to its clean White SKU: …-B -> …-W. */
-export function blackToWhiteSku(sku: string): string {
-  return sku.replace(/-B$/i, '-W')
-}
 
-// One catalog entry per SKU: the variant GID (for checkout) plus its live
-// availability (for inventory sync). We rely solely on `availableForSale`,
-// which Shopify sets false when a variant is unlisted, drafted, or out of
-// stock. We intentionally do NOT request `quantityAvailable`: that field
-// requires the `unauthenticated_read_product_inventory` scope, and including
-// it rejects the entire query for tokens without that scope.
-type SkuEntry = {
+// ---------------------------------------------------------------------------
+// Live Shopify variant index + SKU matching
+// ---------------------------------------------------------------------------
+
+/** A purchasable variant as it exists in Shopify right now. */
+export type ShopifyVariant = {
   variantId: string
+  sku: string
+  size: string
+  price: number
+  compareAt: number
   availableForSale: boolean
 }
 
-// Shopify's `products(query:"sku:…")` search is relevance-based and does NOT
-// reliably return an exact SKU match, so we instead build one complete
-// SKU -> entry map by paginating the whole catalog, then cache it briefly.
-// Concurrent callers share the same in-flight build via the promise.
-let skuMapPromise: Promise<Map<string, SkuEntry>> | null = null
-let skuMapBuiltAt = 0
-// Refresh live inventory at most this often so out-of-stock changes on Shopify
-// propagate to the storefront without re-scanning the catalog on every request.
-const SKU_MAP_TTL_MS = 60_000
+/**
+ * Manual CSV -> Shopify SKU overrides, for variants whose Shopify SKU doesn't
+ * follow the RPM naming. Keys are CSV (Black) SKUs.
+ */
+export const SKU_OVERRIDES: Record<string, string> = {
+  'RPM-CR-0009-B': '8',
+}
 
-type CatalogPage = {
+export type MatchVia = 'override' | 'black-sku' | 'white-sku' | 'base-sku'
+
+export type LiveVariant = ShopifyVariant & { via: MatchVia }
+
+const PRODUCTS_QUERY = /* GraphQL */ `
+  query Variants($cursor: String) {
+    products(first: 100, after: $cursor) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        variants(first: 50) {
+          nodes {
+            id
+            sku
+            availableForSale
+            selectedOptions { value }
+            price { amount }
+            compareAtPrice { amount }
+          }
+        }
+      }
+    }
+  }
+`
+
+type ProductsPage = {
   products: {
     pageInfo: { hasNextPage: boolean; endCursor: string | null }
-    edges: {
-      node: {
-        variants: {
-          edges: {
-            node: {
-              id: string
-              sku: string | null
-              availableForSale: boolean
-            }
-          }[]
-        }
+    nodes: {
+      variants: {
+        nodes: {
+          id: string
+          sku: string | null
+          availableForSale: boolean
+          selectedOptions: { value: string }[]
+          price: { amount: string }
+          compareAtPrice: { amount: string } | null
+        }[]
       }
     }[]
   }
 }
 
-async function buildSkuMap(): Promise<Map<string, SkuEntry>> {
-  const map = new Map<string, SkuEntry>()
+/** "RPM-CR-0001-B" -> "RPM-CR-0001"; non-RPM SKUs are returned unchanged. */
+export function baseSku(sku: string): string {
+  return sku.trim().toUpperCase().replace(/^(RPM-[A-Z0-9]+-\d+)-[A-Z]$/, '$1')
+}
+
+const sizeDigits = (s: string) => s.match(/\d+/)?.[0] ?? ''
+
+export type ShopifyIndex = {
+  bySku: Map<string, ShopifyVariant>
+  byBase: Map<string, ShopifyVariant[]>
+  total: number
+}
+
+/** Fetches every Shopify variant on each call (no cache) so prices/stock are live. */
+export async function fetchShopifyIndex(): Promise<ShopifyIndex> {
+  const bySku = new Map<string, ShopifyVariant>()
+  const byBase = new Map<string, ShopifyVariant[]>()
+  let total = 0
   let cursor: string | null = null
-  // Guard against runaway pagination; 250/page covers thousands of products.
-  for (let page = 0; page < 40; page++) {
-    const data: CatalogPage = await storefront<CatalogPage>(
-      `query Catalog($cursor: String) {
-        products(first: 250, after: $cursor) {
-          pageInfo { hasNextPage endCursor }
-          edges { node { variants(first: 25) { edges { node { id sku availableForSale } } } } }
+
+  for (let page = 0; page < 50; page++) {
+    const data: ProductsPage = await storefront<ProductsPage>(PRODUCTS_QUERY, { cursor })
+    for (const product of data.products.nodes) {
+      for (const v of product.variants.nodes) {
+        const sku = (v.sku || '').trim().toUpperCase()
+        if (!sku) continue
+        const price = Number(v.price.amount) || 0
+        const compareAt = Number(v.compareAtPrice?.amount) || 0
+        const entry: ShopifyVariant = {
+          variantId: v.id,
+          sku,
+          size: v.selectedOptions[0]?.value ?? '',
+          price,
+          compareAt: compareAt > price ? compareAt : 0,
+          availableForSale: v.availableForSale,
         }
-      }`,
-      { cursor },
-    )
-    for (const p of data.products.edges) {
-      for (const v of p.node.variants.edges) {
-        if (v.node.sku) {
-          map.set(v.node.sku.toUpperCase(), {
-            variantId: v.node.id,
-            availableForSale: v.node.availableForSale,
-          })
-        }
+        total++
+        bySku.set(sku, entry)
+        const base = baseSku(sku)
+        byBase.set(base, [...(byBase.get(base) ?? []), entry])
       }
     }
     if (!data.products.pageInfo.hasNextPage) break
     cursor = data.products.pageInfo.endCursor
-    // Small gap between pages so the cold-start catalog scan doesn't trip
-    // Shopify's Storefront rate limiter (a throttled page fails the map build).
-    await sleep(150)
   }
-  return map
-}
 
-async function getSkuMap(): Promise<Map<string, SkuEntry>> {
-  const stale = Date.now() - skuMapBuiltAt > SKU_MAP_TTL_MS
-  if (!skuMapPromise || stale) {
-    skuMapPromise = buildSkuMap()
-      .then((map) => {
-        skuMapBuiltAt = Date.now()
-        return map
-      })
-      .catch((e) => {
-        // Don't cache a failed build — allow the next call to retry.
-        skuMapPromise = null
-        throw e
-      })
-  }
-  return skuMapPromise
+  return { bySku, byBase, total }
 }
 
 /**
- * Resolve a White SKU to its live Shopify variant GID.
- * Returns null when no matching variant exists in the store.
+ * Match one CSV variant to Shopify. Order: manual override -> exact Black SKU
+ * -> White SKU -> same base SKU (choosing the candidate whose size matches).
  */
-export async function getVariantIdByWhiteSku(whiteSku: string): Promise<string | null> {
-  const map = await getSkuMap()
-  return map.get(whiteSku.toUpperCase())?.variantId ?? null
-}
+export function matchVariant(
+  index: ShopifyIndex,
+  v: { blackSku: string; whiteSku: string; label: string },
+): LiveVariant | null {
+  const black = v.blackSku.trim().toUpperCase()
 
-/** True when Shopify reports the variant as purchasable (active, listed, in stock). */
-function entryInStock(entry: SkuEntry | undefined): boolean {
-  return entry?.availableForSale ?? false
+  const override = SKU_OVERRIDES[black]
+  if (override) {
+    const hit = index.bySku.get(override.toUpperCase())
+    if (hit) return { ...hit, via: 'override' }
+  }
+
+  const exact = index.bySku.get(black)
+  if (exact) return { ...exact, via: 'black-sku' }
+
+  const white = index.bySku.get(v.whiteSku.trim().toUpperCase())
+  if (white) return { ...white, via: 'white-sku' }
+
+  const candidates = index.byBase.get(baseSku(black)) ?? []
+  if (candidates.length === 1) return { ...candidates[0], via: 'base-sku' }
+  const wanted = sizeDigits(v.label)
+  const sized = candidates.find((c) => wanted && sizeDigits(c.size) === wanted)
+  return sized ? { ...sized, via: 'base-sku' } : null
 }
 
 /**
- * Live in-stock status for a set of White SKUs, resolved against Shopify.
- * A replica (Black) SKU should be translated with `blackToWhiteSku` first.
- * SKUs with no matching Shopify variant resolve to false (out of stock).
+ * Resolve many CSV variants against live Shopify in one catalog scan.
+ * Returns a map keyed by CSV Black SKU; unmatched SKUs are absent.
  */
-export async function getLiveStockByWhiteSkus(
-  whiteSkus: string[],
-): Promise<Record<string, boolean>> {
-  const map = await getSkuMap()
-  const result: Record<string, boolean> = {}
-  for (const sku of whiteSkus) {
-    result[sku] = entryInStock(map.get(sku.toUpperCase()))
+export async function resolveLiveVariants(
+  variants: { blackSku: string; whiteSku: string; label: string }[],
+): Promise<{ matches: Map<string, LiveVariant>; shopifyVariantCount: number }> {
+  const index = await fetchShopifyIndex()
+  const matches = new Map<string, LiveVariant>()
+  for (const v of variants) {
+    const hit = matchVariant(index, v)
+    if (hit) matches.set(v.blackSku.toUpperCase(), hit)
   }
-  return result
+  return { matches, shopifyVariantCount: index.total }
+}
+
+export function blackToWhiteSku(blackSku: string): string {
+  return blackSku.trim().toUpperCase().replace(/-B$/, '-W')
 }
 
 type CartCreate = {

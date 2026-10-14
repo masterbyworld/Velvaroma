@@ -2,16 +2,18 @@
 
 import useSWR from 'swr'
 
-type InventoryResponse = { stock: Record<string, boolean>; error?: string }
+type LivePrice = { price: number; compareAt: number }
+type InventoryResponse = {
+  stock: Record<string, boolean>
+  prices: Record<string, LivePrice>
+  shopifyAvailable?: boolean
+}
 
-const fetcher = (url: string): Promise<InventoryResponse> =>
-  fetch(url).then((r) => r.json())
+const fetcher = (url: string): Promise<InventoryResponse> => fetch(url).then((r) => r.json())
 
 /**
- * Live inventory hook. Fetches Shopify-resolved stock keyed by White SKU and
- * returns a resolver that overrides the catalog's baseline `inStock` with the
- * live value when known. Falls back to the baseline while loading or if the
- * sync is unavailable, so the storefront never blanks out.
+ * Live Shopify price + inventory, keyed by CSV (Black) SKU. Every resolver takes
+ * the catalog value as a fallback, used while loading or if a SKU is unknown.
  */
 export function useLiveStock() {
   const { data } = useSWR<InventoryResponse>('/api/inventory', fetcher, {
@@ -21,13 +23,16 @@ export function useLiveStock() {
   })
 
   const stock = data?.stock
+  const prices = data?.prices
 
   return {
     ready: Boolean(stock),
-    isInStock(whiteSku: string, fallback: boolean): boolean {
-      if (!stock) return fallback
-      const live = stock[whiteSku]
+    isInStock(blackSku: string, fallback: boolean): boolean {
+      const live = stock?.[blackSku]
       return live === undefined ? fallback : live
+    },
+    priceOf<T extends LivePrice>(blackSku: string, fallback: T): LivePrice {
+      return prices?.[blackSku] ?? { price: fallback.price, compareAt: fallback.compareAt }
     },
   }
 }

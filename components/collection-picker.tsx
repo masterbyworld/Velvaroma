@@ -79,7 +79,7 @@ export function CollectionPicker({
   const active = ordered.find((c) => c.key === activeKey) ?? ordered[0]
   const available = active
     ? (active.key === ALL_KEY ? products : productsByRouteKey(active.key)).filter((p) =>
-        isInStock(p.whiteSku, p.inStock),
+        isInStock(p.blackSku, p.inStock),
       )
     : []
   const items = available.slice(0, limit)

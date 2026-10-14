@@ -26,9 +26,11 @@ function SaleBadge({ off, size = 'md' }: { off: number; size?: 'sm' | 'md' }) {
 
 export function WinningProducts() {
   const quickAddToCart = useQuickAdd()
-  const { isInStock } = useLiveStock()
+  const { isInStock, priceOf } = useLiveStock()
   // Never feature out-of-stock products on the homepage (live stock aware).
-  const available = winningProducts.filter((p) => isInStock(p.whiteSku, p.inStock))
+  const available = winningProducts
+    .filter((p) => isInStock(p.blackSku, p.inStock))
+    .map((p) => ({ ...p, ...priceOf(p.blackSku, p) }))
   const [hero, ...rest] = available
   const runners = rest.slice(0, 4)
 
