@@ -18,7 +18,7 @@ const MAX_QTY_PER_LINE = 20
 const MAX_UNITS_PER_ORDER = 60
 
 export async function POST(req: Request) {
-  let body: { items?: IncomingItem[] }
+  let body: { items?: IncomingItem[]; discountCode?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -101,6 +101,10 @@ export async function POST(req: Request) {
 
   const url = new URL(checkoutUrl)
   url.searchParams.set('channel', 'online_store')
+  const discountCode = typeof body.discountCode === 'string' ? body.discountCode.trim() : ''
+  if (/^[A-Za-z0-9_-]{1,40}$/.test(discountCode)) {
+    url.searchParams.set('discount', discountCode.toUpperCase())
+  }
 
   return NextResponse.json({ checkoutUrl: url.toString() })
 }

@@ -226,10 +226,6 @@ export function ProductDetail({ product }: { product: Product }) {
               <PackageCheck className="h-5 w-5 text-foreground" />
               <span><span className="font-semibold text-foreground">Estimated Delivery:</span> {delivery || '—'}</span>
             </p>
-            <p className="flex items-center gap-2">
-              <Truck className="h-5 w-5 text-foreground" />
-              Enjoy free shipping on all orders over $80.
-            </p>
           </div>
         </div>
       </div>

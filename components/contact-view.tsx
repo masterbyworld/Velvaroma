@@ -29,7 +29,7 @@ function Instagram({ className }: { className?: string }) {
 const highlights = [
   { icon: Clock, title: 'Fast Response', detail: 'We reply within 1–4 hours' },
   { icon: MessageCircle, title: 'Real People', detail: 'Fragrance experts, not bots' },
-  { icon: Truck, title: 'Free Shipping', detail: 'On every order over $80' },
+  { icon: Truck, title: 'Free Shipping', detail: 'Fast, tracked delivery' },
 ]
 
 const socials = [
