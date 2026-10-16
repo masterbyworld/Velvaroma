@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 
 const features = [
-  { icon: '/icons/free-delivery.png', title: 'Free Shipping', desc: 'Enjoy free shipping on all orders over $80.' },
+  { icon: '/icons/free-delivery.png', title: 'Free Shipping', desc: 'Fast, tracked delivery on every order.' },
   { icon: '/icons/satisfaction.png', title: 'Money Guarantee', desc: 'Within 30 days for an exchange.' },
   { icon: '/icons/customer-service.png', title: 'Online Support', desc: '24 hours a day, 7 days a week' },
   { icon: '/icons/payment.png', title: 'Flexible Payment', desc: 'Pay with Multiple Credit Cards' },

@@ -16,7 +16,7 @@ const jost = Jost({
 export const metadata: Metadata = {
   title: 'Velvaroma Fragrance — Luxury Designer Inspired Perfumes',
   description:
-    'Velvaroma Fragrance offers premium designer-inspired perfumes — Baccarat, Creed, Sospiro, Parfums de Marly and more. Buy 2 Get 1 Free. Free shipping over $80.',
+    'Velvaroma Fragrance offers premium designer-inspired perfumes — Baccarat, Creed, Sospiro, Parfums de Marly and more. Buy 2 Get 1 Free.',
   generator: 'v0.app',
   icons: {
     icon: [{ url: '/velvaroma-favicon.png', type: 'image/png' }],
