@@ -8,7 +8,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { useCart } from '@/lib/cart-context'
 import { formatPrice } from '@/lib/products'
-import { cartItemsToEcommerce, trackInitiateCheckout } from '@/lib/tracking'
+import { useShopifyCheckout } from '@/lib/use-shopify-checkout'
 
 const PROMO_PATTERN = /^[A-Za-z0-9_-]{1,40}$/
 
@@ -25,8 +25,7 @@ function dealCopy(count: number, freeCount: number) {
 
 export default function CheckoutPage() {
   const { items, rawSubtotal, discount, subtotal, freeCount, count, removeItem, setQuantity } = useCart()
-  const [redirecting, setRedirecting] = useState(false)
-  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const { startCheckout, redirecting, checkoutError } = useShopifyCheckout()
   const [promoInput, setPromoInput] = useState('')
   const [promoCode, setPromoCode] = useState<string | null>(null)
   const [promoError, setPromoError] = useState<string | null>(null)
@@ -45,41 +44,8 @@ export default function CheckoutPage() {
     setPromoInput('')
   }
 
-  async function proceedToShopify() {
-    if (items.length === 0 || redirecting) return
-    setRedirecting(true)
-    setCheckoutError(null)
-    trackInitiateCheckout(cartItemsToEcommerce(items))
-    try {
-      const res = await fetch('/api/shopify-checkout', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map((i) => ({
-            blackSku: i.blackSku,
-            whiteSku: i.whiteSku,
-            quantity: i.quantity,
-          })),
-          discountCode: promoCode ?? undefined,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.checkoutUrl) {
-        throw new Error(data.error || 'Could not reach the secure Shopify checkout. Please try again.')
-      }
-      // The order is NEVER finalized on our frontend. The only success path is
-      // landing on the live Shopify checkout. Shopify checkout cannot render
-      // inside the v0 preview iframe, so open a new tab when embedded.
-      if (window.self !== window.top) {
-        window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer')
-        setRedirecting(false)
-      } else {
-        window.location.href = data.checkoutUrl
-      }
-    } catch (e) {
-      setCheckoutError(e instanceof Error ? e.message : 'Checkout failed')
-      setRedirecting(false)
-    }
+  function proceedToShopify() {
+    startCheckout(items, promoCode)
   }
 
   return (
